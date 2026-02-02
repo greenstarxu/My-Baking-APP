@@ -1,0 +1,29 @@
+{
+  "name": "baking-finance-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "firebase": "^11.6.1",
+    "lucide-react": "^0.344.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.18",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.2.2"
+  }
+}
+
+我已经根据你的需求，将代码优化为可以直接在 Canvas 中运行并作为多端访问的基础。如果你需要具体的 Vercel 配置演示，或者在发布过程中遇到任何“报错”，随时把报错截图或文字发给我！
