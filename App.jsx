@@ -10,28 +10,51 @@ import {
 } from 'lucide-react';
 
 /**
- * 注意：当你部署到 GitHub/Vercel 时：
- * 1. 请确保在本地环境中安装了依赖: npm install firebase lucide-react xlsx tailwindcss
- * 2. __firebase_config 和 __app_id 是当前预览环境特有的。
- * 3. 在生产环境中，你应该手动替换下面的 config 对象。
+ * 修复说明：
+ * 使用安全的方式读取环境变量，以兼容不同的编译环境。
  */
 
-const firebaseConfig = typeof __firebase_config !== 'undefined' 
-  ? JSON.parse(__firebase_config) 
-  : {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+// 安全读取环境变量的辅助函数
+const getEnv = (key) => {
+  try {
+    // 优先尝试 Vite 的 import.meta.env (用于 Vercel/本地开发)
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+      return import.meta.env[key];
+    }
+    // 兼容 process.env (某些传统的 Webpack 环境)
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key];
+    }
+  } catch (e) {
+    // 忽略错误
+  }
+  return "";
+};
 
+// 获取 Firebase 配置
+const getFirebaseConfig = () => {
+  // 1. 优先尝试预览环境自动注入的配置
+  if (typeof __firebase_config !== 'undefined') {
+    return JSON.parse(__firebase_config);
+  }
+  
+  // 2. 否则尝试从环境变量读取 (用于部署后的 Vercel)
+  return {
+    apiKey: getEnv('VITE_FIREBASE_API_KEY'),
+    authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+    projectId: getEnv('VITE_FIREBASE_PROJECT_ID'),
+    storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+    messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+    appId: getEnv('VITE_FIREBASE_APP_ID')
+  };
+};
+
+const firebaseConfig = getFirebaseConfig();
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'baking-shop-manager';
-const GEMINI_API_KEY = ""; // 如果需要OCR功能，请在此处填写 Gemini API Key
+const GEMINI_API_KEY = getEnv('VITE_GEMINI_API_KEY'); 
 
 // --- 常量定义 ---
 const CURRENCY = "AED";
@@ -147,7 +170,7 @@ export default function App() {
 
   const scanReceipt = async (base64Image) => {
     if (!GEMINI_API_KEY) {
-      alert("请先在代码中配置 Gemini API Key 以启用此功能。");
+      alert("请在 Vercel 环境变量中配置 VITE_GEMINI_API_KEY 以开启 AI 识别。");
       return;
     }
     setIsScanning(true);
@@ -170,7 +193,7 @@ export default function App() {
       });
       const result = await response.json();
       const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      const jsonStr = text.match(/\{.*\}/s)?.[0];
+      const jsonStr = text?.match(/\{.*\}/s)?.[0];
       if (jsonStr) {
         const parsed = JSON.parse(jsonStr);
         setAmount(parsed.total.toString());
